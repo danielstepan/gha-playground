@@ -14,10 +14,6 @@ jobs:
     steps:
     - name: Check out the code
       uses: actions/checkout@v3
-
-    - name: Say hello world
-      run: |
-        echo "Hello world from Pull Request!"
      
     - name: Get pull request number
       run: |
