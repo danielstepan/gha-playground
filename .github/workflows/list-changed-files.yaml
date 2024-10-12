@@ -13,34 +13,21 @@ jobs:
 
     steps:
     - name: Check out the code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
      
     - name: Get pull request number
       run: |
         echo "PR_NUMBER=${{ github.event.issue.number }}" >> $GITHUB_ENV
   
-    - name: Get list of changed files
-      run: |
-        {
-            echo 'CHANGED_FILES<<EOF'
-            gh pr diff $PR_NUMBER --name-only
-            echo EOF
-        } >> "$GITHUB_ENV"
-   
-    - name: Comment changed files on the PR
-      run: |
-        gh pr comment $PR_NUMBER --body "List of changed files:
-            ${CHANGED_FILES}"
+    - name: Get list of changes
+      id: list_changes
+      uses: ./.github/actions/list-changed-applications
+      with:
+        pr_number: ${{ github.event.issue.number }}
+        token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Identify changed applications
+    - name: Comment changed applications on the PR
       run: |
-        {
-            echo 'CHANGED_APPS<<EOF'
-            echo "${CHANGED_FILES}" | grep deployments/ | cut -d '/' -f 2 | sort -u | uniq
-            echo EOF
-        } >> "$GITHUB_ENV"  
-
-    - name: Comment applications on the PR
-      run: |
+        CHANGED_APPS=$(echo "${{ steps.list_changes.outputs.changed-apps-base64 }}" | base64 --decode)
         gh pr comment $PR_NUMBER --body "List of changed applications:
-            ${CHANGED_APPS}"
+        $CHANGED_APPS"

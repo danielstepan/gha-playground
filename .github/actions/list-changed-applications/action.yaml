@@ -1,0 +1,35 @@
+name: "Get Changed Files and Applications"
+description: "An action to get changed files and applications in a pull request"
+inputs:
+  pr_number:
+    description: "Pull request number"
+    required: true
+  token:
+    description: "GitHub token"
+    required: true
+outputs:
+  changed-apps-base64:
+    description: "List of changed apps in the PR, encoded in base64"
+    value: ${{ steps.changed-apps.outputs.CHANGED_APPS }}
+runs:
+  using: composite
+  steps:
+    - name: Check out the code
+      uses: actions/checkout@v3
+
+    - name: Get list of changed files
+      shell: bash
+      run: |
+        {
+            echo 'CHANGED_FILES<<EOF'
+            gh pr diff ${{ inputs.pr_number }} --name-only
+            echo EOF
+        } >> "$GITHUB_ENV"
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+
+    - name: Identify changed applications
+      id: changed-apps
+      shell: bash
+      run: |
+        echo "CHANGED_APPS=$(echo "${CHANGED_FILES}" | grep deployments/ | cut -d '/' -f 2 | sort -u | uniq | base64)" >> $GITHUB_OUTPUT
