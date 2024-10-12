@@ -3,4 +3,4 @@ kind: Deployment
 metadata:
   name: service-two
 spec:
-  replicas: 2
+  replicas: 3
