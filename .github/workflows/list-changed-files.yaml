@@ -38,9 +38,11 @@ jobs:
 
     - name: Identify changed applications
       run: |
-        changed_apps=$(echo "${CHANGED_FILES}" | grep deployments/ | cut -d '/' -f 2 | sort -u | uniq)
-        echo $changed_apps    
-        echo "CHANGED_APPS=$changed_apps" >> $GITHUB_ENV
+        {
+            echo 'CHANGED_APPS<<EOF'
+            echo "${CHANGED_FILES}" | grep deployments/ | cut -d '/' -f 2 | sort -u | uniq
+            echo EOF
+        } >> "$GITHUB_ENV"  
 
     - name: Comment applications on the PR
       run: |
