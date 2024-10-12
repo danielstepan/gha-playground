@@ -20,14 +20,13 @@ jobs:
         echo "Hello world from Pull Request!"
      
     - name: Get pull request number
-      id: pr
       run: |
-        echo "PR_NUMBER=$(echo "${{ github.event.issue.number }}")" >> $GITHUB_ENV
+        echo "PR_NUMBER=${{ github.event.issue.number }}" >> $GITHUB_ENV
   
     - name: Get list of changed files
       run: |
-        CHANGED_FILES=$(gh pr diff $PR_NUMBER --name-only)
-        echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
+        CHANGED_FILES=$(gh pr diff $PR_NUMBER --name-only | tr '\n' ', ')
+        echo "CHANGED_FILES=${CHANGED_FILES%, }" >> $GITHUB_ENV
     
     - name: Comment on the PR
       uses: actions/github-script@v6
@@ -38,4 +37,4 @@ jobs:
             owner: context.repo.owner,
             repo: context.repo.repo,
             body: `List of changed files:\n\n${{ env.CHANGED_FILES }}`
-          })    
+          })
