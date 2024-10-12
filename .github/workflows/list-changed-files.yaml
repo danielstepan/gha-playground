@@ -8,6 +8,9 @@ jobs:
   list_changed_files:
     if: startsWith(github.event.comment.body, '/list') && github.event.issue.pull_request
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+
     steps:
     - name: Check out the code
       uses: actions/checkout@v3
