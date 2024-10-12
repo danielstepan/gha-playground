@@ -35,3 +35,9 @@ jobs:
       run: |
         gh pr comment $PR_NUMBER --body "List of changed files:
             ${CHANGED_FILES}"
+
+    - name: Identify changed applications
+      run: |
+        changed_apps=$(echo "${CHANGED_FILES}" | grep -Eo '^deployments/[^/]+/overlays/'"${COMMENT_ENV}" | cut -d '/' -f 2 | sort -u)
+        echo $changed_apps    
+        echo "CHANGED_APPS=$changed_apps" >> $GITHUB_ENV
