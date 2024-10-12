@@ -25,9 +25,12 @@ jobs:
   
     - name: Get list of changed files
       run: |
-        CHANGED_FILES=$(gh pr diff $PR_NUMBER --name-only | tr '\n' ', ')
-        echo "CHANGED_FILES=${CHANGED_FILES%, }" >> $GITHUB_ENV
-    
+        {
+            echo 'CHANGED_FILES<<EOF'
+            gh pr diff $PR_NUMBER --name-only
+            echo EOF
+        } >> "$GITHUB_ENV"
+   
     - name: Comment on the PR
       uses: actions/github-script@v6
       with:
