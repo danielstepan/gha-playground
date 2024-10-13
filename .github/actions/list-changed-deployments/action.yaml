@@ -1,5 +1,5 @@
-name: "Get Changed Files and Applications"
-description: "An action to get changed files and applications in a pull request"
+name: "Get changed files and deployments"
+description: "An action to get changed deployments in a pull request"
 inputs:
   pr_number:
     description: "Pull request number"
@@ -8,9 +8,9 @@ inputs:
     description: "GitHub token"
     required: true
 outputs:
-  changed-apps-base64:
-    description: "List of changed apps in the PR, encoded in base64"
-    value: ${{ steps.changed-apps.outputs.CHANGED_APPS }}
+  changed-deployments-base64:
+    description: "List of changed deployments in the PR, encoded in base64"
+    value: ${{ steps.changed-deployments.outputs.CHANGED_DEPLOYMENTS }}
 runs:
   using: composite
   steps:
@@ -28,8 +28,8 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.token }}
 
-    - name: Identify changed applications
-      id: changed-apps
+    - name: Identify changed deployments
+      id: changed-deployments
       shell: bash
       run: |
-        echo "CHANGED_APPS=$(echo "${CHANGED_FILES}" | grep deployments/ | cut -d '/' -f 2 | sort -u | uniq | base64)" >> $GITHUB_OUTPUT
+        echo "CHANGED_DEPLOYMENTS=$(echo "${CHANGED_FILES}" | grep deployments/ | cut -d '/' -f 2 | sort -u | uniq | base64)" >> $GITHUB_OUTPUT

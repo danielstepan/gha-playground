@@ -1,4 +1,4 @@
-name: Comment changed applications
+name: Comment with changed deployments
 
 on:
   issue_comment:
@@ -21,13 +21,13 @@ jobs:
   
     - name: Get list of changes
       id: list_changes
-      uses: ./.github/actions/list-changed-applications
+      uses: ./.github/actions/list-changed-deployments
       with:
         pr_number: ${{ github.event.issue.number }}
         token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Comment changed applications on the PR
+    - name: Comment changed deployments on the PR
       run: |
-        CHANGED_APPS=$(echo "${{ steps.list_changes.outputs.changed-apps-base64 }}" | base64 --decode)
-        gh pr comment $PR_NUMBER --body "List of changed applications:
+        CHANGED_APPS=$(echo "${{ steps.list_changes.outputs.changed-deployments-base64 }}" | base64 --decode)
+        gh pr comment $PR_NUMBER --body "List of changed deployments:
         $CHANGED_APPS"
