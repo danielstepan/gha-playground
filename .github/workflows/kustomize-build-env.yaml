@@ -39,9 +39,10 @@ jobs:
         gh pr comment $PR_NUMBER --body "The environment '$COMMENT_ENV' is unsupported. Please choose one of the following: dev, staging, prod.
         
         Example: /build dev"
+
+        exit 1
     
     - name: Download and install Kustomize v5.4.2
-      if: steps.check_env.outputs.SUPPORTED_ENV == 'true'
       run: |
         curl -Lo kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v5.4.2/kustomize_v5.4.2_linux_amd64.tar.gz
         tar -xzf kustomize.tar.gz
@@ -49,7 +50,6 @@ jobs:
         rm kustomize.tar.gz
 
     - name: Run Kustomize build for the selected environment
-      if: steps.check_env.outputs.SUPPORTED_ENV == 'true'
       run: |
         {
             echo 'KUSTOMIZE_OUTPUT<<EOF'
@@ -58,7 +58,6 @@ jobs:
         } >> "$GITHUB_ENV"
 
     - name: Comment build success
-      if: steps.check_env.outputs.SUPPORTED_ENV == 'true'
       run: |
         gh pr comment $PR_NUMBER --body "Kustomize build for the environment'$COMMENT_ENV':
         \`\`\`yaml
