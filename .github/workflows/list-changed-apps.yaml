@@ -1,11 +1,11 @@
-name: List Changed Files
+name: Comment changed applications
 
 on:
   issue_comment:
     types: [created]
 
 jobs:
-  list_changed_files:
+  comment_changed_apps:
     if: startsWith(github.event.comment.body, '/list') && github.event.issue.pull_request
     runs-on: ubuntu-latest
     env:
