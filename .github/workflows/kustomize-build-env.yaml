@@ -1,0 +1,46 @@
+name: Build k8s manifests for the chosen environment with Kustomize
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  kustomize_selected_env:
+    if: startsWith(github.event.comment.body, '/build') && github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+
+    steps:
+    - name: Check out the code
+      uses: actions/checkout@v4
+     
+    - name: Get pull request number
+      run: |
+        echo "PR_NUMBER=${{ github.event.issue.number }}" >> $GITHUB_ENV
+
+    - name: Extract the environment from the comment
+      run: |
+        COMMENT_ENV=$(echo "${{ github.event.comment.body }}" | awk '{print $2}')
+        echo "COMMENT_ENV=$COMMENT_ENV" >> $GITHUB_ENV
+
+    - name: Check if the environment is supported
+      id: check_env
+      run: |
+        if [[ "$COMMENT_ENV" == "dev" || "$COMMENT_ENV" == "staging" || "$COMMENT_ENV" == "prod" ]]; then
+          echo "SUPPORTED_ENV=true" >> $GITHUB_OUTPUT
+        else
+          echo "SUPPORTED_ENV=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Proceed with the build (if supported)
+      if: steps.check_env.outputs.SUPPORTED_ENV == 'true'
+      run: |
+        gh pr comment $PR_NUMBER --body "The environment '$COMMENT_ENV' is supported."
+
+    - name: Comment on unsupported environment
+      if: steps.check_env.outputs.SUPPORTED_ENV == 'false'
+      run: |
+        gh pr comment $PR_NUMBER --body "The environment '$COMMENT_ENV' is unsupported. Please choose one of the following: dev, staging, prod.
+        
+        Example: /build dev"
