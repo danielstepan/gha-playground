@@ -14,7 +14,11 @@ jobs:
     steps:
     - name: Check out the code
       uses: actions/checkout@v4
-     
+    
+    - name: Print branch name
+      run: |
+        echo "Branch: ${{ github.event.issue.pull_request.head.ref }}"
+
     - name: Get pull request number
       run: |
         echo "PR_NUMBER=${{ github.event.issue.number }}" >> $GITHUB_ENV
@@ -42,6 +46,23 @@ jobs:
 
         exit 1
     
+    - name: Get list of changed deployments
+      id: list_changes
+      uses: ./.github/actions/list-changed-deployments
+      with:
+        pr_number: ${{ github.event.issue.number }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Check if all edited deployments have the chosen overlay
+      run: |
+        CHANGED_APPS=$(echo "${{ steps.list_changes.outputs.changed-deployments-base64 }}" | base64 --decode)
+        echo "$CHANGED_APPS" | while IFS= read -r app; do
+          if [ ! -d "deployments/$app/overlays/$COMMENT_ENV" ]; then
+            gh pr comment $PR_NUMBER --body ":x: The deployment $app does not have '$COMMENT_ENV' overlay."
+            exit 1
+          fi
+        done
+
     - name: Download and install Kustomize v5.4.2
       run: |
         curl -Lo kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v5.4.2/kustomize_v5.4.2_linux_amd64.tar.gz
@@ -49,18 +70,13 @@ jobs:
         sudo mv kustomize /usr/local/bin/
         rm kustomize.tar.gz
 
-    - name: Run Kustomize build for the selected environment
+    - name: Run Kustomize build for edited deployments and selected environment
       run: |
-        {
-            echo 'KUSTOMIZE_OUTPUT<<EOF'
-            kustomize build deployments/service-one/overlays/$COMMENT_ENV
-            echo EOF
-        } >> "$GITHUB_ENV"
-
-    - name: Comment build success
-      run: |
-        gh pr comment $PR_NUMBER --body "Kustomize build for the environment'$COMMENT_ENV':
-        \`\`\`yaml
-        $KUSTOMIZE_OUTPUT
-        \`\`\`"
- 
+        CHANGED_APPS=$(echo "${{ steps.list_changes.outputs.changed-deployments-base64 }}" | base64 --decode)
+        echo "$CHANGED_APPS" | while IFS= read -r app; do
+          KUSTOMIZE_OUTPUT=$(kustomize build deployments/$app/overlays/$COMMENT_ENV)
+          gh pr comment $PR_NUMBER --body "Deployment $app - $COMMENT_ENV:
+          \`\`\`yaml
+          $KUSTOMIZE_OUTPUT
+          \`\`\`"
+        done
